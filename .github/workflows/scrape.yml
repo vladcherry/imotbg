@@ -1,8 +1,8 @@
-name: Обновить данные
+name: Update data
 
 on:
   schedule:
-    - cron: '17 3,15 * * *' # дважды в сутки, UTC
+    - cron: '17 3,15 * * *' # twice a day, UTC
   workflow_dispatch:
 
 permissions:
@@ -25,17 +25,17 @@ jobs:
 
       - run: npm ci
 
-      - name: Собрать объявления
+      - name: Scrape listings
         run: npm run scrape
 
-      - name: Закоммитить изменения
+      - name: Commit changes
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/data
           if git diff --staged --quiet; then
-            echo "Изменений нет"
+            echo "No changes"
           else
-            git commit -m "data: обновление $(date -u +%Y-%m-%d\ %H:%M) UTC"
+            git commit -m "data: update $(date -u +%Y-%m-%d\ %H:%M) UTC"
             git push
           fi
