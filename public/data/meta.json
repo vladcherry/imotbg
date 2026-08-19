@@ -1,0 +1,22 @@
+{
+  "updatedAt": "2026-08-19T15:19:55.813Z",
+  "demo": true,
+  "cities": {
+    "sofia": {
+      "count": 1400,
+      "label": "sofia"
+    },
+    "plovdiv": {
+      "count": 500,
+      "label": "plovdiv"
+    },
+    "varna": {
+      "count": 600,
+      "label": "varna"
+    },
+    "burgas": {
+      "count": 400,
+      "label": "burgas"
+    }
+  }
+}
