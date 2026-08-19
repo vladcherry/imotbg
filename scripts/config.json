@@ -6,22 +6,22 @@
     {
       "city": "sofia",
       "label": "София — продажби",
-      "slink": "REPLACE_ME"
+      "path": "grad-sofiya"
     },
     {
       "city": "plovdiv",
       "label": "Пловдив — продажби",
-      "slink": "REPLACE_ME"
+      "path": "grad-plovdiv"
     },
     {
       "city": "varna",
       "label": "Варна — продажби",
-      "slink": "REPLACE_ME"
+      "path": "grad-varna"
     },
     {
       "city": "burgas",
       "label": "Бургас — продажби",
-      "slink": "REPLACE_ME"
+      "path": "grad-burgas"
     }
   ]
 }

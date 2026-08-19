@@ -28,17 +28,16 @@ npm run dev
 
 ## Wiring up real data
 
-imot.bg keeps search parameters in a session identifier called `slink`.
-You have to grab it by hand once per city:
+Search results live at a clean path per city: `imot.bg/obiavi/prodazhbi/grad-<city>`
+(page 2+: `.../grad-<city>/p-2`). The path for each city is already set in
+`scripts/config.json`; you only need to touch it if imot.bg changes its slugs or you
+add a city — open imot.bg, search that city, and copy the `grad-...` segment from the
+resulting URL.
 
-1. Open imot.bg, set up a search (продажби → city → property type), press «Търси».
-2. The address bar will read `...act=3&slink=abc12345&f1=1`. Copy the `slink` value.
-3. Put it into `scripts/config.json` for the matching city.
-
-Then check that the parser still matches the markup:
+Check that the parser still matches the markup:
 
 ```bash
-npm run probe "https://www.imot.bg/pcgi/imot.cgi?act=3&slink=abc12345&f1=1"
+npm run probe "https://www.imot.bg/obiavi/prodazhbi/grad-sofiya"
 ```
 
 The script saves the HTML to `scripts/.cache/probe.html` and reports how many cards
@@ -51,9 +50,6 @@ Once probe returns something sensible:
 ```bash
 npm run scrape
 ```
-
-A `slink` only lives for a limited time. If scraping starts coming back empty,
-refresh it.
 
 ## Coordinates
 

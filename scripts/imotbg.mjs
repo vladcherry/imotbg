@@ -54,10 +54,12 @@ export function parseArea(raw) {
   return Number.isFinite(n) && n > 5 && n < 5000 ? Math.round(n) : null
 }
 
-/** "3-ti ot 6" / "et. 3 ot 6" -> { floor: 3, floors: 6 } */
+/** "3-ti ot 6" / "3-ти ет. от 6" -> { floor: 3, floors: 6 }; "Партер от 5" -> { floor: 0, floors: 5 } */
 export function parseFloor(raw) {
   if (!raw) return { floor: null, floors: null }
-  const m = /(\d{1,2})\s*(?:-?[а-яa-z]{0,3})?\s*от\s*(\d{1,2})/i.exec(raw)
+  const ground = /партер\s*от\s*(\d{1,2})/i.exec(raw)
+  if (ground) return { floor: 0, floors: Number(ground[1]) }
+  const m = /(\d{1,2})-[а-я]{2,3}\.?(?:\s*ет\.?)?\s*от\s*(\d{1,2})/i.exec(raw)
   if (!m) return { floor: null, floors: null }
   return { floor: Number(m[1]), floors: Number(m[2]) }
 }
@@ -89,17 +91,18 @@ export function parseYear(raw) {
 
 /**
  * Parses a search results page.
- * Historically imot.bg used table.tblOffers, a.lnk1 (title) and div.price.
- * The candidate lists below are tried in order; when the markup changes,
- * prepend a new variant to CARD_SELECTORS / FIELD.
+ * imot.bg has used table.tblOffers/a.lnk1/div.price in the past and
+ * div.item/a.title/<location> since its 2026 redesign. The candidate lists
+ * below are tried in order; when the markup changes, prepend a new variant
+ * to CARD_SELECTORS / FIELD.
  */
-const CARD_SELECTORS = ['table.tblOffers', 'div.listing', 'div.item', 'table[class*="Offer"]']
+const CARD_SELECTORS = ['div.item', 'table.tblOffers', 'div.listing', 'table[class*="Offer"]']
 
 const FIELD = {
-  link: ['a.lnk1', 'a.lnk2', 'a[href*="act=5"]', 'a[href*="/obiava"]'],
+  link: ['a.title', 'a.lnk1', 'a.lnk2', 'a[href*="act=5"]', 'a[href*="/obiava"]'],
   price: ['div.price', '.price', 'span.price'],
-  location: ['a.lnk2', 'div.location', '.adress'],
-  photo: ['img[src*="/photosorg/"]', 'img[src*="imot.bg"]', 'img'],
+  location: ['a.title location', 'location', 'a.lnk2', 'div.location', '.adress'],
+  photo: ['img.pic', 'img[src*="/photosorg/"]', 'img[src*="imot.bg"]', 'img'],
 }
 
 const pick = (root, $, list) => {
@@ -127,10 +130,15 @@ export function parseSearchPage(html, { city }) {
     if (href.startsWith('//')) href = 'https:' + href
     if (href.startsWith('/')) href = 'https://www.imot.bg' + href
 
-    const id = /adv=(\d+)/.exec(href)?.[1] ?? /(\d{8,})/.exec(href)?.[1]
+    const id =
+      /\/obiava-([0-9a-z]+)-/i.exec(href)?.[1] ??
+      /adv=(\d+)/.exec(href)?.[1] ??
+      /(\d{8,})/.exec(href)?.[1]
     if (!id) return
 
-    const title = link.text().replace(/\s+/g, ' ').trim()
+    const titleEl = link.clone()
+    titleEl.find('location').remove()
+    const title = titleEl.text().replace(/\s+/g, ' ').trim()
     const priceText = pick(root, $, FIELD.price).text()
     const locText = pick(root, $, FIELD.location).text().replace(/\s+/g, ' ').trim()
     const body = root.text().replace(/\s+/g, ' ')
@@ -159,6 +167,6 @@ export function parseSearchPage(html, { city }) {
     })
   })
 
-  const hasNext = /следваща|next|»/i.test($('body').text()) && cards.length > 0
+  const hasNext = /следваща|напред|next|»/i.test($('body').text()) && cards.length > 0
   return { listings: out, hasNext, cardCount: cards.length }
 }

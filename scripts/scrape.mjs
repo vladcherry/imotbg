@@ -8,8 +8,10 @@ const config = JSON.parse(readFileSync(resolve(here, 'config.json'), 'utf8'))
 const districts = JSON.parse(readFileSync(resolve(here, 'districts.json'), 'utf8'))
 const dataDir = resolve(here, '../public/data')
 
-const pageUrl = (slink, page) =>
-  `https://www.imot.bg/pcgi/imot.cgi?act=3&slink=${slink}&f1=${page}`
+const pageUrl = (path, page) =>
+  page === 1
+    ? `https://www.imot.bg/obiavi/prodazhbi/${path}`
+    : `https://www.imot.bg/obiavi/prodazhbi/${path}/p-${page}`
 
 /** Deterministic hash so a listing keeps the same scatter between runs. */
 function hash(str) {
@@ -55,16 +57,16 @@ function dedupe(listings) {
   return [...seen.values()]
 }
 
-async function scrapeCity({ city, slink, label }) {
-  if (!slink || slink === 'REPLACE_ME') {
-    console.warn(`[${city}] slink is not set in config.json, skipping`)
+async function scrapeCity({ city, path, label }) {
+  if (!path) {
+    console.warn(`[${city}] path is not set in config.json, skipping`)
     return []
   }
   const all = []
   for (let page = 1; page <= config.maxPagesPerCity; page++) {
     let html
     try {
-      html = await fetchPage(pageUrl(slink, page), { delayMs: config.delayMs })
+      html = await fetchPage(pageUrl(path, page), { delayMs: config.delayMs })
     } catch (err) {
       console.error(`[${city}] page ${page}: ${err.message}`)
       break

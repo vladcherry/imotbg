@@ -81,9 +81,10 @@ with the frontend staying on Pages.
    points don't jump between runs.
 4. **Duplicates.** The same flat is listed by several agencies. Collapse on the key
    `city|district|type|area|price|floor`; on a tie, keep the one that has a photo.
-5. **`slink`.** imot.bg stores search parameters in a session identifier in the URL:
-   `act=3&slink=XXXX&f1=N`. It's copied manually from the browser and expires after
-   a while. It lives in `scripts/config.json`.
+5. **Search URLs.** imot.bg exposes clean per-city paths: `obiavi/prodazhbi/grad-<city>`,
+   paginated as `.../grad-<city>/p-<n>`. The site used to require a per-city session
+   token (`act=3&slink=XXXX&f1=N`) copied from the browser; it dropped that scheme in
+   its 2026 redesign. The path per city lives in `scripts/config.json`.
 6. **Selectors.** imot.bg markup can change. Everything coupled to it lives in
    `scripts/imotbg.mjs` and nowhere else, with `probe.mjs` for diagnostics.
 7. **Currency.** Prices appear in both EUR and BGN. Normalise to EUR at a fixed
@@ -191,7 +192,7 @@ imotbg/
 │  ├─ geocode.mjs         # top up neighbourhood coords via Nominatim
 │  ├─ mock.mjs            # demo data generator
 │  ├─ districts.json      # neighbourhood → [lat, lng] for 4 cities
-│  └─ config.json         # slink and crawl parameters
+│  └─ config.json         # per-city search path and crawl parameters
 ├─ public/data/           # scraper output, committed to the repo
 ├─ src/
 │  ├─ types.ts
@@ -228,13 +229,13 @@ return iconv.decode(buf, enc)
 ### Selectors with fallbacks
 
 ```js
-const CARD_SELECTORS = ['table.tblOffers', 'div.listing', 'div.item', 'table[class*="Offer"]']
+const CARD_SELECTORS = ['div.item', 'table.tblOffers', 'div.listing', 'table[class*="Offer"]']
 
 const FIELD = {
-  link:     ['a.lnk1', 'a.lnk2', 'a[href*="act=5"]', 'a[href*="/obiava"]'],
+  link:     ['a.title', 'a.lnk1', 'a.lnk2', 'a[href*="act=5"]', 'a[href*="/obiava"]'],
   price:    ['div.price', '.price', 'span.price'],
-  location: ['a.lnk2', 'div.location', '.adress'],
-  photo:    ['img[src*="/photosorg/"]', 'img[src*="imot.bg"]', 'img'],
+  location: ['a.title location', 'location', 'a.lnk2', 'div.location', '.adress'],
+  photo:    ['img.pic', 'img[src*="/photosorg/"]', 'img[src*="imot.bg"]', 'img'],
 }
 ```
 

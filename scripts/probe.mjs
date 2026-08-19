@@ -1,5 +1,5 @@
 // Checks the selectors against a live page.
-// Usage: node scripts/probe.mjs "https://www.imot.bg/pcgi/imot.cgi?act=3&slink=XXXX&f1=1"
+// Usage: node scripts/probe.mjs "https://www.imot.bg/obiavi/prodazhbi/grad-sofiya"
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,7 +21,7 @@ console.log(`HTML saved: ${dump} (${(html.length / 1024).toFixed(0)} KB)`)
 
 const $ = cheerio.load(html)
 console.log('\nListing card candidates:')
-for (const sel of ['table.tblOffers', 'div.listing', 'div.item', 'table[class*="Offer"]', 'a[href*="act=5"]']) {
+for (const sel of ['div.item', 'table.tblOffers', 'div.listing', 'table[class*="Offer"]', 'a.title']) {
   console.log(`  ${sel.padEnd(28)} → ${$(sel).length}`)
 }
 
