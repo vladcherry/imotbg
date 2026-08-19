@@ -1,0 +1,41 @@
+name: Обновить данные
+
+on:
+  schedule:
+    - cron: '17 3,15 * * *' # дважды в сутки, UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Собрать объявления
+        run: npm run scrape
+
+      - name: Закоммитить изменения
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data
+          if git diff --staged --quiet; then
+            echo "Изменений нет"
+          else
+            git commit -m "data: обновление $(date -u +%Y-%m-%d\ %H:%M) UTC"
+            git push
+          fi
