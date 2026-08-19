@@ -1,0 +1,27 @@
+{
+  "maxPagesPerCity": 40,
+  "delayMs": 1500,
+  "jitterMeters": 260,
+  "searches": [
+    {
+      "city": "sofia",
+      "label": "София — продажби",
+      "slink": "REPLACE_ME"
+    },
+    {
+      "city": "plovdiv",
+      "label": "Пловдив — продажби",
+      "slink": "REPLACE_ME"
+    },
+    {
+      "city": "varna",
+      "label": "Варна — продажби",
+      "slink": "REPLACE_ME"
+    },
+    {
+      "city": "burgas",
+      "label": "Бургас — продажби",
+      "slink": "REPLACE_ME"
+    }
+  ]
+}
