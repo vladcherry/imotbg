@@ -65,7 +65,7 @@ export function useResults(listings: Listing[], filters: Filters) {
   }, [listings, filters])
 }
 
-/** Границы фильтров считаем от всего набора, а не от отфильтрованного — иначе ползунки скачут. */
+/** Bounds come from the whole dataset, not the filtered subset, or the sliders jump on every change. */
 export function useBounds(listings: Listing[]) {
   return useMemo(() => {
     if (!listings.length) return null

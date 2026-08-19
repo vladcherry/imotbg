@@ -1,33 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
 import type { Listing } from '../types'
 import { num } from '../lib/format'
-import { PPSM_SCALE } from './MapView'
+import { colorForPpsm } from '../lib/scale'
 
 const BINS = 48
-
-function colorFor(ppsm: number) {
-  const stops = PPSM_SCALE
-  if (ppsm <= stops[0][0]) return stops[0][1]
-  if (ppsm >= stops[stops.length - 1][0]) return stops[stops.length - 1][1]
-  for (let i = 1; i < stops.length; i++) {
-    const [v1, c1] = stops[i - 1]
-    const [v2, c2] = stops[i]
-    if (ppsm <= v2) {
-      const t = (ppsm - v1) / (v2 - v1)
-      const mix = (a: string, b: string) => {
-        const pa = parseInt(a.slice(1), 16)
-        const pb = parseInt(b.slice(1), 16)
-        const ch = (s: number) =>
-          Math.round((((pa >> s) & 255) * (1 - t) + ((pb >> s) & 255) * t))
-            .toString(16)
-            .padStart(2, '0')
-        return `#${ch(16)}${ch(8)}${ch(0)}`
-      }
-      return mix(c1, c2)
-    }
-  }
-  return stops[0][1]
-}
 
 interface Props {
   listings: Listing[]
@@ -37,8 +13,8 @@ interface Props {
 }
 
 /**
- * Ценовая лента: распределение объявлений по €/м².
- * Тянешь по ленте — фильтруешь и список, и карту одним жестом.
+ * Price ribbon: the distribution of listings by €/m².
+ * Drag across it to filter both the list and the map in one gesture.
  */
 export default function PriceRibbon({ listings, bounds, value, onChange }: Props) {
   const svg = useRef<SVGSVGElement>(null)
@@ -86,7 +62,7 @@ export default function PriceRibbon({ listings, bounds, value, onChange }: Props
   return (
     <div className="select-none">
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Цена за м², €</span>
+        <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Price per m², €</span>
         {value ? (
           <button
             onClick={() => onChange(null)}
@@ -110,7 +86,7 @@ export default function PriceRibbon({ listings, bounds, value, onChange }: Props
         onPointerMove={handleMove}
         onPointerUp={handleUp}
         role="slider"
-        aria-label="Диапазон цены за квадратный метр"
+        aria-label="Price per square metre range"
         aria-valuemin={lo}
         aria-valuemax={hi}
         aria-valuenow={value ? value[0] : lo}
@@ -124,7 +100,7 @@ export default function PriceRibbon({ listings, bounds, value, onChange }: Props
               y={22 - Math.max(0.7, b.h * 22)}
               width={100 / BINS - 0.25}
               height={Math.max(0.7, b.h * 22)}
-              fill={colorFor(b.ppsm)}
+              fill={colorForPpsm(b.ppsm)}
               opacity={active ? 1 : 0.18}
             />
           )

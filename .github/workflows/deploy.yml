@@ -1,8 +1,14 @@
-name: Деплой на Pages
+name: Deploy to Pages
 
 on:
   push:
     branches: [main]
+  # A push made with the built-in GITHUB_TOKEN does not trigger other
+  # workflows, so the scrape job cannot rebuild Pages by pushing alone.
+  # Chain off its completion instead.
+  workflow_run:
+    workflows: ["Update data"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -10,14 +16,21 @@ permissions:
   pages: write
   id-token: write
 
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and the latest queued. Do NOT cancel in-progress runs: a cancelled
+# deploy can leave the published site half-updated.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # A workflow_run fires on every completion, including failures.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
+      # On workflow_run, GITHUB_SHA is the last commit on the default branch,
+      # so this picks up the data commit the scrape job just pushed.
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -27,7 +40,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Собрать демо-данные, если реальных нет
+      - name: Collect demo data if there is no real data
         run: |
           if [ ! -f public/data/sofia.json ]; then npm run mock; fi
 

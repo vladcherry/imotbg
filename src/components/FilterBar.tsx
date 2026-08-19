@@ -1,25 +1,26 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { Filters, Listing, SortKey } from '../types'
 import { eurCompact, num } from '../lib/format'
 import { districtStats } from '../lib/data'
 
 const TYPE_ORDER = ['1-СТАЕН', '2-СТАЕН', '3-СТАЕН', '4-СТАЕН', 'МНОГОСТАЕН', 'МЕЗОНЕТ', 'КЪЩА']
+// Keys are raw imot.bg values and must stay in Bulgarian.
 const TYPE_LABEL: Record<string, string> = {
-  '1-СТАЕН': 'Студия',
-  '2-СТАЕН': '1 спальня',
-  '3-СТАЕН': '2 спальни',
-  '4-СТАЕН': '3 спальни',
-  МНОГОСТАЕН: '4+ спальни',
-  МЕЗОНЕТ: 'Мезонет',
-  КЪЩА: 'Дом',
+  '1-СТАЕН': 'Studio',
+  '2-СТАЕН': '1 bedroom',
+  '3-СТАЕН': '2 bedrooms',
+  '4-СТАЕН': '3 bedrooms',
+  МНОГОСТАЕН: '4+ bedrooms',
+  МЕЗОНЕТ: 'Maisonette',
+  КЪЩА: 'House',
 }
 
 const SORTS: [SortKey, string][] = [
-  ['new', 'Сначала новые'],
-  ['ppsm', 'Дешевле за м²'],
-  ['price', 'Дешевле'],
-  ['price-desc', 'Дороже'],
-  ['area-desc', 'Больше площадь'],
+  ['new', 'Newest first'],
+  ['ppsm', 'Lowest €/m²'],
+  ['price', 'Lowest price'],
+  ['price-desc', 'Highest price'],
+  ['area-desc', 'Largest area'],
 ]
 
 interface Props {
@@ -70,7 +71,8 @@ function RangeInput({
   const [min, max] = value ?? bounds
   const set = (i: 0 | 1, raw: string) => {
     const n = Number(raw)
-    const next: [number, number] = i === 0 ? [n, max] : [min, n]
+    // Clamp against the opposite handle so the range can never invert.
+    const next: [number, number] = i === 0 ? [Math.min(n, max), max] : [min, Math.max(n, min)]
     onChange(next[0] <= bounds[0] && next[1] >= bounds[1] ? null : next)
   }
   return (
@@ -90,7 +92,7 @@ function RangeInput({
           value={min}
           onChange={(e) => set(0, e.target.value)}
           className="h-1 w-full accent-accent"
-          aria-label={`${label}: минимум`}
+          aria-label={`${label}: minimum`}
         />
         <input
           type="range"
@@ -100,7 +102,7 @@ function RangeInput({
           value={max}
           onChange={(e) => set(1, e.target.value)}
           className="h-1 w-full accent-accent"
-          aria-label={`${label}: максимум`}
+          aria-label={`${label}: maximum`}
         />
       </div>
     </div>
@@ -110,8 +112,12 @@ function RangeInput({
 export default function FilterBar({ filters, setFilters, listings, bounds }: Props) {
   const [districtsOpen, setDistrictsOpen] = useState(false)
   const patch = (p: Partial<Filters>) => setFilters({ ...filters, ...p })
-  const stats = districtStats(listings)
-  const availableTypes = TYPE_ORDER.filter((t) => listings.some((l) => l.type === t))
+  // Both scan the full city dataset, so keep them off the per-keystroke path.
+  const stats = useMemo(() => districtStats(listings), [listings])
+  const availableTypes = useMemo(
+    () => TYPE_ORDER.filter((t) => listings.some((l) => l.type === t)),
+    [listings],
+  )
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
@@ -121,7 +127,7 @@ export default function FilterBar({ filters, setFilters, listings, bounds }: Pro
       <input
         value={filters.query}
         onChange={(e) => patch({ query: e.target.value })}
-        placeholder="Район или ключевое слово"
+        placeholder="Neighbourhood or keyword"
         className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent"
       />
 
@@ -140,7 +146,7 @@ export default function FilterBar({ filters, setFilters, listings, bounds }: Pro
       )}
 
       <RangeInput
-        label="Цена"
+        label="Price"
         bounds={bounds.price}
         value={filters.price}
         step={5000}
@@ -148,7 +154,7 @@ export default function FilterBar({ filters, setFilters, listings, bounds }: Pro
         onChange={(v) => patch({ price: v })}
       />
       <RangeInput
-        label="Площадь, м²"
+        label="Area, m²"
         bounds={bounds.area}
         value={filters.area}
         step={5}
@@ -161,9 +167,9 @@ export default function FilterBar({ filters, setFilters, listings, bounds }: Pro
           onClick={() => setDistrictsOpen((v) => !v)}
           className="flex w-full items-baseline justify-between text-left"
         >
-          <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Районы</span>
+          <span className="text-[11px] uppercase tracking-[0.14em] text-muted">Neighbourhoods</span>
           <span className="font-mono text-[11px] text-accent">
-            {filters.districts.length ? `выбрано ${filters.districts.length}` : 'все'}{' '}
+            {filters.districts.length ? `${filters.districts.length} selected` : 'all'}{' '}
             {districtsOpen ? '▴' : '▾'}
           </span>
         </button>
@@ -193,7 +199,7 @@ export default function FilterBar({ filters, setFilters, listings, bounds }: Pro
         value={filters.sort}
         onChange={(e) => patch({ sort: e.target.value as SortKey })}
         className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none focus:border-accent"
-        aria-label="Сортировка"
+        aria-label="Sort order"
       >
         {SORTS.map(([k, label]) => (
           <option key={k} value={k}>

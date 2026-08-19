@@ -11,7 +11,7 @@ const dataDir = resolve(here, '../public/data')
 const pageUrl = (slink, page) =>
   `https://www.imot.bg/pcgi/imot.cgi?act=3&slink=${slink}&f1=${page}`
 
-/** Детерминированный хеш → одинаковый разброс точки между запусками. */
+/** Deterministic hash so a listing keeps the same scatter between runs. */
 function hash(str) {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) {
@@ -22,9 +22,9 @@ function hash(str) {
 }
 
 /**
- * imot.bg не отдаёт координаты — есть только квартал.
- * Ставим точку в центр квартала и разбрасываем внутри круга,
- * чтобы объявления не слипались в одну точку.
+ * imot.bg exposes no coordinates, only a neighbourhood.
+ * Place the point at the neighbourhood centre and scatter it inside a
+ * circle so listings do not collapse onto a single pixel.
  */
 function locate(listing) {
   const dict = districts[listing.city]
@@ -44,7 +44,7 @@ function locate(listing) {
   }
 }
 
-/** Одно и то же жильё висит у нескольких агентств — схлопываем. */
+/** The same property is listed by several agencies; collapse duplicates. */
 function dedupe(listings) {
   const seen = new Map()
   for (const l of listings) {
@@ -57,7 +57,7 @@ function dedupe(listings) {
 
 async function scrapeCity({ city, slink, label }) {
   if (!slink || slink === 'REPLACE_ME') {
-    console.warn(`[${city}] slink не задан в config.json — пропускаю`)
+    console.warn(`[${city}] slink is not set in config.json, skipping`)
     return []
   }
   const all = []
@@ -66,15 +66,15 @@ async function scrapeCity({ city, slink, label }) {
     try {
       html = await fetchPage(pageUrl(slink, page), { delayMs: config.delayMs })
     } catch (err) {
-      console.error(`[${city}] стр. ${page}: ${err.message}`)
+      console.error(`[${city}] page ${page}: ${err.message}`)
       break
     }
     const { listings, cardCount } = parseSearchPage(html, { city })
-    console.log(`[${city}] стр. ${page}: карточек ${cardCount}, разобрано ${listings.length}`)
+    console.log(`[${city}] page ${page}: ${cardCount} cards, ${listings.length} parsed`)
     if (!listings.length) break
     all.push(...listings)
   }
-  console.log(`[${city}] ${label}: собрано ${all.length}`)
+  console.log(`[${city}] ${label}: ${all.length} collected`)
   return all
 }
 
@@ -95,7 +95,7 @@ async function main() {
       })
       .filter((l) => l && l.price && l.area)
 
-    // Сохраняем дату первого показа, чтобы позже строить историю цен.
+    // Keep the first-seen date so price history can be built later.
     const file = resolve(dataDir, `${search.city}.json`)
     if (existsSync(file)) {
       const prevById = new Map(JSON.parse(readFileSync(file, 'utf8')).map((l) => [l.id, l]))
@@ -110,15 +110,15 @@ async function main() {
 
     writeFileSync(file, JSON.stringify(prepared))
     meta.cities[search.city] = { count: prepared.length, label: search.label }
-    console.log(`[${search.city}] записано ${prepared.length} объектов`)
+    console.log(`[${search.city}] wrote ${prepared.length} listings`)
   }
 
   writeFileSync(resolve(dataDir, 'meta.json'), JSON.stringify(meta, null, 2))
 
   if (unknownDistricts.size) {
-    console.warn('\nКварталы без координат (упали в центр города):')
+    console.warn('\nNeighbourhoods without coordinates (fell back to the city centre):')
     for (const d of [...unknownDistricts].sort()) console.warn('  ' + d)
-    console.warn('Добавь их в scripts/districts.json или запусти npm run geocode')
+    console.warn('Add them to scripts/districts.json or run npm run geocode')
   }
 }
 

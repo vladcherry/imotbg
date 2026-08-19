@@ -1,5 +1,5 @@
-// Демо-данные, чтобы интерфейс работал до того, как заработает скрапер.
-// Запуск: npm run mock
+// Demo data so the interface works before the scraper is configured.
+// Usage: npm run mock
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,7 +9,7 @@ const districts = JSON.parse(readFileSync(resolve(here, 'districts.json'), 'utf8
 const dataDir = resolve(here, '../public/data')
 mkdirSync(dataDir, { recursive: true })
 
-// Базовая цена €/м² по городу — примерный порядок величин, не рыночные данные.
+// Base €/m² per city - rough order of magnitude, not real market data.
 const BASE_PPSM = { sofia: 2100, plovdiv: 1450, varna: 1600, burgas: 1350 }
 const COUNT = { sofia: 1400, plovdiv: 500, varna: 600, burgas: 400 }
 const TYPES = ['1-СТАЕН', '2-СТАЕН', '2-СТАЕН', '3-СТАЕН', '3-СТАЕН', '4-СТАЕН', 'МЕЗОНЕТ', 'КЪЩА']
@@ -30,7 +30,7 @@ for (const [city, count] of Object.entries(COUNT)) {
   for (let i = 0; i < count; i++) {
     const district = pick(names)
     const [dLat, dLng] = districts[city][district]
-    // Чем дальше от центра — тем дешевле, плюс шум.
+    // Further from the centre means cheaper, plus noise.
     const distKm = Math.hypot((dLat - center[0]) * 111, (dLng - center[1]) * 82)
     const type = pick(TYPES)
     const area = Math.round(ROOM_AREA[type] * (0.75 + rnd() * 0.5))
@@ -62,8 +62,8 @@ for (const [city, count] of Object.entries(COUNT)) {
 
   writeFileSync(resolve(dataDir, `${city}.json`), JSON.stringify(out))
   meta.cities[city] = { count: out.length, label: city }
-  console.log(`${city}: ${out.length} демо-объектов`)
+  console.log(`${city}: ${out.length} demo listings`)
 }
 
 writeFileSync(resolve(dataDir, 'meta.json'), JSON.stringify(meta, null, 2))
-console.log('Готово. Это демо-данные — цены выдуманы.')
+console.log('Done. This is demo data - the prices are made up.')

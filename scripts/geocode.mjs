@@ -1,6 +1,6 @@
-// Добавляет координаты кварталов в districts.json через Nominatim.
-// Запуск: node scripts/geocode.mjs sofia "Витоша" "Драгалевци"
-// Nominatim: не больше 1 запроса в секунду, обязательно с User-Agent.
+// Adds neighbourhood coordinates to districts.json via Nominatim.
+// Usage: node scripts/geocode.mjs sofia "Витоша" "Драгалевци"
+// Nominatim: max 1 request per second, User-Agent required.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -13,7 +13,7 @@ const CITY_NAMES = { sofia: 'София', plovdiv: 'Пловдив', varna: 'В�
 const [city, ...names] = process.argv.slice(2)
 
 if (!city || !CITY_NAMES[city] || !names.length) {
-  console.error('Использование: node scripts/geocode.mjs <sofia|plovdiv|varna|burgas> "Квартал" ...')
+  console.error('Usage: node scripts/geocode.mjs <sofia|plovdiv|varna|burgas> "Neighbourhood" ...')
   process.exit(1)
 }
 
@@ -25,7 +25,7 @@ for (const name of names) {
   const res = await fetch(url, { headers: { 'User-Agent': 'bgimot-geocoder/0.1' } })
   const json = await res.json()
   if (!json.length) {
-    console.warn(`✗ ${name} — не найдено`)
+    console.warn(`✗ ${name} — not found`)
   } else {
     const { lat, lon } = json[0]
     districts[city][name] = [+Number(lat).toFixed(4), +Number(lon).toFixed(4)]
@@ -35,4 +35,4 @@ for (const name of names) {
 }
 
 writeFileSync(path, JSON.stringify(districts, null, 2) + '\n')
-console.log('districts.json обновлён')
+console.log('districts.json updated')

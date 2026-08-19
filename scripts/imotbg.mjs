@@ -1,5 +1,5 @@
-// Всё, что зависит от вёрстки imot.bg, живёт здесь.
-// Если сайт поменяет разметку — правится только этот файл.
+// Everything coupled to imot.bg markup lives here.
+// If the site changes its HTML, this is the only file to touch.
 import * as cheerio from 'cheerio'
 import iconv from 'iconv-lite'
 
@@ -10,7 +10,7 @@ export const BGN_PER_EUR = 1.95583
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-/** Забирает страницу и перекодирует windows-1251 → utf-8. */
+/** Fetches a page and re-encodes windows-1251 -> utf-8. */
 export async function fetchPage(url, { retries = 3, delayMs = 1200 } = {}) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -35,7 +35,7 @@ export async function fetchPage(url, { retries = 3, delayMs = 1200 } = {}) {
   }
 }
 
-/** "125 000 EUR" / "245 000 лв." → цена в евро. */
+/** "125 000 EUR" / "245 000 lv." -> price in EUR. */
 export function parsePrice(raw) {
   if (!raw) return null
   const text = raw.replace(/\u00a0/g, ' ')
@@ -45,7 +45,7 @@ export function parsePrice(raw) {
   return Math.round(isBgn ? num / BGN_PER_EUR : num)
 }
 
-/** "78 кв.м" → 78 */
+/** "78 kv.m" -> 78 */
 export function parseArea(raw) {
   if (!raw) return null
   const m = /(\d[\d\s]*(?:[.,]\d+)?)\s*(?:кв\.?\s*м|m2|м2)/i.exec(raw.replace(/\u00a0/g, ' '))
@@ -54,7 +54,7 @@ export function parseArea(raw) {
   return Number.isFinite(n) && n > 5 && n < 5000 ? Math.round(n) : null
 }
 
-/** "3-ти от 6" / "ет. 3 от 6" → { floor: 3, floors: 6 } */
+/** "3-ti ot 6" / "et. 3 ot 6" -> { floor: 3, floors: 6 } */
 export function parseFloor(raw) {
   if (!raw) return { floor: null, floors: null }
   const m = /(\d{1,2})\s*(?:-?[а-яa-z]{0,3})?\s*от\s*(\d{1,2})/i.exec(raw)
@@ -62,7 +62,7 @@ export function parseFloor(raw) {
   return { floor: Number(m[1]), floors: Number(m[2]) }
 }
 
-/** "гр. София, кв. Лозенец" → "Лозенец" */
+/** "gr. Sofia, kv. Lozenets" -> "Lozenets" */
 export function parseDistrict(raw) {
   if (!raw) return null
   const parts = raw.split(',').map((s) => s.trim())
@@ -88,10 +88,10 @@ export function parseYear(raw) {
 }
 
 /**
- * Парсит страницу результатов поиска.
- * Селекторы imot.bg исторически: table.tblOffers, a.lnk1 (заголовок), div.price.
- * Список кандидатов ниже проверяется по очереди — при смене вёрстки
- * добавь новый вариант в CARD_SELECTORS / FIELD.
+ * Parses a search results page.
+ * Historically imot.bg used table.tblOffers, a.lnk1 (title) and div.price.
+ * The candidate lists below are tried in order; when the markup changes,
+ * prepend a new variant to CARD_SELECTORS / FIELD.
  */
 const CARD_SELECTORS = ['table.tblOffers', 'div.listing', 'div.item', 'table[class*="Offer"]']
 

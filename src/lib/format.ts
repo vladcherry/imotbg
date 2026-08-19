@@ -1,17 +1,17 @@
-const nf = new Intl.NumberFormat('ru-RU')
+const nf = new Intl.NumberFormat('en-US')
 
 export const eur = (n: number) => '€' + nf.format(n)
 
 export const eurCompact = (n: number) =>
-  n >= 1_000_000 ? '€' + (n / 1_000_000).toFixed(2) + ' млн' : '€' + Math.round(n / 1000) + 'к'
+  n >= 1_000_000 ? '€' + (n / 1_000_000).toFixed(2) + 'M' : '€' + Math.round(n / 1000) + 'k'
 
 export const num = (n: number) => nf.format(n)
 
 export const CITY_LABEL: Record<string, string> = {
-  sofia: 'София',
-  plovdiv: 'Пловдив',
-  varna: 'Варна',
-  burgas: 'Бургас',
+  sofia: 'Sofia',
+  plovdiv: 'Plovdiv',
+  varna: 'Varna',
+  burgas: 'Burgas',
 }
 
 export const CITY_CENTER: Record<string, [number, number]> = {
@@ -23,13 +23,14 @@ export const CITY_CENTER: Record<string, [number, number]> = {
 
 export function daysAgo(ts: number) {
   const d = Math.floor((Date.now() - ts) / 86400000)
-  if (d <= 0) return 'сегодня'
-  if (d === 1) return 'вчера'
-  if (d < 30) return `${d} дн. назад`
-  return `${Math.floor(d / 30)} мес. назад`
+  if (d <= 0) return 'today'
+  if (d === 1) return 'yesterday'
+  if (d < 30) return `${d}d ago`
+  const months = Math.floor(d / 30)
+  return `${months}mo ago`
 }
 
 export function floorLabel(floor: number | null, floors: number | null) {
   if (!floor) return null
-  return floors ? `${floor}/${floors} эт.` : `${floor} эт.`
+  return floors ? `floor ${floor}/${floors}` : `floor ${floor}`
 }

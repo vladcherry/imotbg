@@ -30,15 +30,15 @@ function Card({
       >
         <div className="flex items-baseline justify-between gap-3">
           <span className="font-mono text-[17px] font-medium tracking-tight">{eur(l.price)}</span>
-          <span className="font-mono text-[12px] text-muted">{num(l.ppsm)} €/м²</span>
+          <span className="font-mono text-[12px] text-muted">{num(l.ppsm)} €/m²</span>
         </div>
 
         <div className="mt-0.5 truncate text-[14px]">
-          {l.type ?? 'Объект'} · {l.district ?? '—'}
+          {l.type ?? 'Property'} · {l.district ?? '—'}
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-muted">
-          <span className="font-mono">{l.area} м²</span>
+          <span className="font-mono">{l.area} m²</span>
           {floorLabel(l.floor, l.floors) && <span>{floorLabel(l.floor, l.floors)}</span>}
           {l.build && <span>{l.build}</span>}
           {l.year && <span className="font-mono">{l.year}</span>}
@@ -47,7 +47,7 @@ function Card({
 
         {dropped && (
           <div className="mt-1.5 inline-block rounded bg-hot/10 px-1.5 py-0.5 font-mono text-[11px] text-hot">
-            −{num(l.prevPrice! - l.price)} € с прошлой проверки
+            −{num(l.prevPrice! - l.price)} € since last check
           </div>
         )}
       </button>
@@ -67,15 +67,15 @@ export default function ResultsList({ results, selectedId, onSelect, loading }: 
   useEffect(() => setLimit(PAGE), [results])
 
   if (loading) {
-    return <div className="px-4 py-8 text-sm text-muted">Загружаю объявления…</div>
+    return <div className="px-4 py-8 text-sm text-muted">Loading listings…</div>
   }
 
   if (!results.length) {
     return (
       <div className="px-4 py-8">
-        <p className="text-sm font-medium">Под фильтры ничего не подошло</p>
+        <p className="text-sm font-medium">Nothing matches these filters</p>
         <p className="mt-1 text-sm text-muted">
-          Расширь диапазон цены или сбрось выделение на ценовой ленте.
+          Widen the price range or clear the selection on the price ribbon.
         </p>
       </div>
     )
@@ -104,7 +104,7 @@ export default function ResultsList({ results, selectedId, onSelect, loading }: 
             rel="noopener noreferrer"
             className="block rounded-lg bg-accent px-3 py-2 text-center text-sm font-medium text-white hover:bg-accent/90"
           >
-            Открыть на imot.bg
+            Open on imot.bg
           </a>
         </div>
       )}
@@ -114,7 +114,7 @@ export default function ResultsList({ results, selectedId, onSelect, loading }: 
           onClick={() => setLimit((v) => v + PAGE * 2)}
           className="w-full border-t border-line py-3 text-sm text-accent hover:bg-paper"
         >
-          Показать ещё {Math.min(PAGE * 2, results.length - limit)}
+          Show {Math.min(PAGE * 2, results.length - limit)} more
         </button>
       )}
     </div>

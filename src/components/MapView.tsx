@@ -3,15 +3,7 @@ import maplibregl, { Map as MlMap, GeoJSONSource } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { CityKey, Listing } from '../types'
 import { CITY_CENTER } from '../lib/format'
-
-// Цвет = цена за квадратный метр. Это главный сигнал карты.
-export const PPSM_SCALE: [number, string][] = [
-  [700, '#0D6E5F'],
-  [1200, '#5AA08A'],
-  [1800, '#D9C98B'],
-  [2600, '#D98A4A'],
-  [3500, '#C0451F'],
-]
+import { PPSM_SCALE } from '../lib/scale'
 
 const colorExpr = (input: unknown) => [
   'interpolate',
@@ -35,6 +27,27 @@ export default function MapView({ listings, city, selectedId, onSelect }: Props)
   const ready = useRef(false)
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
+  // listing id -> numeric feature id, rebuilt on every data push
+  const featureIds = useRef(new Map<string, number>())
+  const highlighted = useRef<number | null>(null)
+  const selectedIdRef = useRef(selectedId)
+  selectedIdRef.current = selectedId
+
+  /** Moves the `selected` feature state to the currently selected listing. */
+  const applyHighlight = () => {
+    const m = map.current
+    if (!m || !ready.current || !m.getSource('listings')) return
+    if (highlighted.current !== null) {
+      m.setFeatureState({ source: 'listings', id: highlighted.current }, { selected: false })
+      highlighted.current = null
+    }
+    const id = selectedIdRef.current
+    if (!id) return
+    const fid = featureIds.current.get(id)
+    if (fid === undefined) return
+    m.setFeatureState({ source: 'listings', id: fid }, { selected: true })
+    highlighted.current = fid
+  }
 
   useEffect(() => {
     if (!container.current || map.current) return
@@ -158,34 +171,50 @@ export default function MapView({ listings, city, selectedId, onSelect }: Props)
     }
   }, [])
 
-  // Данные
+  // Data
   useEffect(() => {
     const m = map.current
     if (!m) return
     const push = () => {
       const src = m.getSource('listings') as GeoJSONSource | undefined
       if (!src) return
-      src.setData({
-        type: 'FeatureCollection',
-        features: listings.map((l) => ({
-          type: 'Feature',
-          id: Number(l.id.replace(/\D/g, '').slice(-9)) || 0,
-          geometry: { type: 'Point', coordinates: [l.lng, l.lat] },
+      // Feature ids are positional, so they change on every push.
+      // Drop the old feature state before reassigning them.
+      m.removeFeatureState({ source: 'listings' })
+      highlighted.current = null
+      const ids = new Map<string, number>()
+      const features = listings.map((l, i) => {
+        ids.set(l.id, i + 1)
+        return {
+          type: 'Feature' as const,
+          id: i + 1,
+          geometry: { type: 'Point' as const, coordinates: [l.lng, l.lat] },
           properties: { id: l.id, ppsm: l.ppsm, price: l.price },
-        })),
+        }
       })
+      featureIds.current = ids
+      src.setData({ type: 'FeatureCollection', features })
+      applyHighlight()
     }
-    if (ready.current) push()
-    else m.once('data-ready', push)
+    if (ready.current) {
+      push()
+      return
+    }
+    // Data can arrive before the style loads; drop the pending listener on rerun.
+    m.once('data-ready', push)
+    return () => {
+      m.off('data-ready', push)
+    }
   }, [listings])
 
-  // Смена города
+  // City switch
   useEffect(() => {
     map.current?.easeTo({ center: CITY_CENTER[city], zoom: 11, duration: 700 })
   }, [city])
 
-  // Выбранный объект — подлетаем и подсвечиваем
+  // Selected listing: paint the feature state and fly to it
   useEffect(() => {
+    applyHighlight()
     const m = map.current
     if (!m || !selectedId) return
     const l = listings.find((x) => x.id === selectedId)

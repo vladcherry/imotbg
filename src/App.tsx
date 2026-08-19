@@ -44,10 +44,10 @@ export default function App() {
     <div className="flex h-dvh flex-col bg-paper text-ink">
       <header className="z-20 flex shrink-0 items-center gap-4 border-b border-line bg-panel px-4 py-2.5">
         <span className="font-display text-[15px] tracking-tight">
-          имоти<span className="text-accent">.</span>
+          imoti<span className="text-accent">.</span>
         </span>
 
-        <nav className="flex gap-0.5" aria-label="Город">
+        <nav className="flex gap-0.5" aria-label="City">
           {CITIES.map((c) => (
             <button
               key={c}
@@ -62,7 +62,7 @@ export default function App() {
         </nav>
 
         <div className="ml-auto flex items-center gap-3 font-mono text-[11px] text-muted">
-          {median && <span className="hidden sm:inline">медиана {num(median)} €/м²</span>}
+          {median && <span className="hidden sm:inline">median {num(median)} €/m²</span>}
           <span>
             {num(results.length)}
             {results.length !== listings.length && `/${num(listings.length)}`}
@@ -72,8 +72,8 @@ export default function App() {
 
       {meta?.demo && (
         <div className="shrink-0 bg-hot/10 px-4 py-1.5 text-center text-[12px] text-hot">
-          Демо-данные. Настрой <code className="font-mono">scripts/config.json</code> и запусти{' '}
-          <code className="font-mono">npm run scrape</code>, чтобы подтянуть imot.bg.
+          Demo data. Set up <code className="font-mono">scripts/config.json</code> and run{' '}
+          <code className="font-mono">npm run scrape</code> to pull real imot.bg listings.
         </div>
       )}
 
@@ -111,10 +111,10 @@ export default function App() {
             />
             {state === 'error' && (
               <div className="px-4 py-8">
-                <p className="text-sm font-medium">Данные по городу не загрузились</p>
+                <p className="text-sm font-medium">Could not load data for this city</p>
                 <p className="mt-1 text-sm text-muted">
-                  Файл <code className="font-mono">public/data/{filters.city}.json</code> не найден.
-                  Запусти <code className="font-mono">npm run mock</code> или{' '}
+                  <code className="font-mono">public/data/{filters.city}.json</code> is missing. Run{' '}
+                  <code className="font-mono">npm run mock</code> or{' '}
                   <code className="font-mono">npm run scrape</code>.
                 </p>
               </div>
@@ -135,7 +135,7 @@ export default function App() {
           onClick={() => setMobileView((v) => (v === 'list' ? 'map' : 'list'))}
           className="fixed bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full bg-ink px-5 py-2.5 text-sm text-paper shadow-lg md:hidden"
         >
-          {mobileView === 'list' ? 'На карту' : 'Списком'}
+          {mobileView === 'list' ? 'Map' : 'List'}
         </button>
       </main>
     </div>
