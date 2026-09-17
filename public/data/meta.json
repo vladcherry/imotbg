@@ -1,16 +1,16 @@
 {
-  "updatedAt": "2026-09-17T08:41:28.032Z",
+  "updatedAt": "2026-09-17T19:03:15.851Z",
   "cities": {
     "sofia": {
-      "count": 988,
+      "count": 987,
       "label": "София — продажби"
     },
     "plovdiv": {
-      "count": 968,
+      "count": 966,
       "label": "Пловдив — продажби"
     },
     "varna": {
-      "count": 968,
+      "count": 967,
       "label": "Варна — продажби"
     },
     "burgas": {
